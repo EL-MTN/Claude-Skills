@@ -65,6 +65,46 @@ Two-sentence template that fits most PRs:
 
 The second sentence is optional. Don't pad to two sentences when one is enough.
 
+## Rule 4 — Clustering low-signal PRs
+
+When **3+ consecutive PRs** in the output would all summarize as "no user-visible change" / "internal cleanup" / "CI hygiene" / "routine dep bump", collapse them into a single section rather than rendering them as separate near-identical entries. Three "no behavior change" lines in a row don't scan — one labeled cluster does.
+
+### Cluster format
+
+```
+## Internal cleanup (4 merged, mostly @williammartin)
+- #13476 Remove discussion workflow
+- #13474 Remove dependency on persistent token
+- #13470 Remove third-party license debris
+- #13461 Bump goreleaser-action 7.2.1 → 7.2.2 (@dependabot)
+```
+
+Keep PR numbers and titles (a user who's curious can still dig in). Drop the per-PR summary sentence. The cluster *theme* (section header) names the kind of low-signal — pick the most specific honest label:
+
+- "Internal cleanup" — release-pipeline / CI / build / housekeeping
+- "Routine dependency bumps" — dependabot/renovate version-only bumps with no notable upstream changes
+- "Docs / typo fixes" — markdown-only PRs
+- "Test scaffolding" — adds tests without changing behavior
+
+If the substance is genuinely mixed and no single label fits, the PRs probably shouldn't be clustered.
+
+### Thresholds and edge cases
+
+- **Threshold: 3+ consecutive.** A 2-PR group stays expanded; let it stand on its own. The point is to suppress *repetition*, not to compress aggressively.
+- **Mixed authors are fine** if the substance is uniform (e.g., 3 human chore PRs + 2 dependabot bumps can still cluster). Note the dominant author in the header.
+- **A bot-only cluster** (e.g., 5 dependabot PRs in a row) renders the bot as the "author" of the cluster.
+- **Don't cluster across boundaries.** Don't mix merged + open in one cluster; the merged-vs-open distinction matters more than the cluster theme.
+
+### When NOT to cluster (override rules)
+
+Even with 3+ "no user-visible change" PRs in a row, pull a PR out and let it stand alone when:
+
+- **It touches security-sensitive code.** A one-line "fix token handling on redirect" isn't routine no matter how small the diff is.
+- **It's a notable upstream changelog inside a dep bump.** A `go-containerregistry` bump that picks up SSRF fixes is interesting; the bump from `v0.21.5` to `v0.21.6` isn't.
+- **It would surprise a careful reviewer.** "Remove third-party license debris" sounds routine, but if you'd expect any reviewer to ask "wait, why?", let it stand.
+
+Use judgment. The rule exists to suppress noise, not to compress signal.
+
 ## Examples (the same PR, before and after the rubric)
 
 ### Raw `gh` / `git log` output

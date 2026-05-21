@@ -78,6 +78,36 @@ Cap each PR at ~8 commit lines. If a PR has 30 commits, summarize the work into 
 
 Use the format below. Order PRs: merged first (most recent → oldest), then open (most recently updated first). Within each, no other re-ordering.
 
+**Cluster low-signal PRs.** Before rendering, scan the ordered list for runs of 3+ consecutive PRs that would all summarize as "no user-visible change" / "internal cleanup" / "routine dep bump" / "docs typo." Collapse each such run into a single labeled cluster section rather than rendering them as separate near-identical entries. See `references/summarization-rubric.md` ("Rule 4 — Clustering low-signal PRs") for the format and the override cases (security fixes, notable upstream changelogs, surprises — pull these out of the cluster and let them stand alone).
+
+**Lift priority PRs to the top.** The default ordering (merged first, then open by recency) buries load-bearing PRs whenever they aren't the most recent. A security fix that's been sitting open for a few days, a data-loss bug merged early in the window — both end up several entries down. After clustering, scan the full set for PRs a careful reviewer would want surfaced first:
+
+- Security fixes / vulnerabilities patched
+- Data-loss / data-corruption bugs
+- Backwards-incompatible changes (breaking changes, dropped runtime/OS support)
+- Hotfixes / explicit "regression" or "urgent" labels
+
+If 1–5 such PRs exist, render them as a `## Priority` section at the very top — **full entries** (per-PR summary and any commit lines), each marked with a state tag (`open` / `merged`). Then continue with `## Merged` and `## Open` sections **excluding the priority PRs** (they're already rendered above; do not duplicate). Note the exclusion in the section's count if helpful — e.g., "## Merged (4 — 1 in Priority above)" — but only if it adds clarity.
+
+Cap at 5. If more than 5 qualify, pick the most consequential; do not extend the list. If zero qualify, omit Priority entirely — don't fabricate urgency. The criteria overlap with the cluster-override list in the rubric, on purpose: the same PRs that resist clustering are the ones that earn a Priority slot.
+
+Example shape:
+
+```
+## Priority
+
+## #13463 fix(agent-task/capi): don't re-attach Bearer on cross-host redirect (open, @gistrec, updated …)
+<full summary>
+
+## #13449 fix(skills): stage updates in a temp dir and swap in-place (open, @SamMorrowDrums, updated …)
+<full summary>
+
+## Merged
+
+## #13479 Stop bumping homebrew on release (merged …, @williammartin)
+…
+```
+
 ```
 # PR digest — <repo>, since <resolved-window>
 

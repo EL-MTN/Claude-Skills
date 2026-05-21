@@ -47,7 +47,7 @@ gh pr list --state open --draft=false --search "updated:>$SINCE" --json number,t
 
 Both queries are time-bounded. The open query uses `updated:>` (not `created:>`) so a PR opened months ago that someone touched yesterday still shows up — that's "in flight" for the purpose of a catch-up. Without the time filter, the open query can pull tens of KB across long-stale PRs and bury the signal.
 
-If `gh` isn't authenticated, fall back to git-only mode (commits on the default branch since the window, grouped by merge commit if present). Tell the user `gh` was unavailable so the digest is commit-shaped, not PR-shaped.
+If `gh` isn't authenticated, fall back to **commit-shaped mode** (see step 5) — tell the user `gh` was unavailable so the digest is commit-shaped, not PR-shaped.
 
 ### 3. For each PR, gather commits and a representative diff
 
@@ -121,7 +121,20 @@ Example shape:
 ## #<num> ...
 ```
 
-If there are no PRs in the window, say so plainly and offer to widen the window or switch to commit-shaped mode.
+**When there are no PRs in the window.** Check `git log --since=$SINCE --oneline`:
+
+- **≥1 commit exists** → auto-fall-back to commit-shaped mode (below). Don't offer-and-wait; the user asked for a digest and there's activity to show. Lead with a one-line note: `> No PRs in this window (repo uses direct pushes / no PR workflow). Rendering commit-shaped digest instead.`
+- **0 commits too** → the window is genuinely empty. Say so plainly and offer to widen it. Don't render an empty digest.
+
+### Commit-shaped mode
+
+Used when `gh` is unavailable, or when there are no PRs but there are commits. Same rubric, same rules — just commits instead of PRs as the unit:
+
+- Pull commits with `git log --since=$SINCE --pretty=...` on the default branch (and `--all` only if the user asks about other branches).
+- Apply the **same user-perspective phrasing**, **noise filter**, **clustering**, and **Priority** rules — a commit is summarized exactly as a PR's commit line would be (a tiny user-perspective phrase), and a run of 3+ low-signal commits clusters the same way.
+- Group by merge commit if the history has them (each merge ≈ a PR); otherwise list commits directly.
+- Render under `## Commits on <branch> (N, <author summary>)` instead of `## Merged` / `## Open`.
+- Footer: show the `git log --since=...` command instead of the `gh` one.
 
 ### 6. Footer
 

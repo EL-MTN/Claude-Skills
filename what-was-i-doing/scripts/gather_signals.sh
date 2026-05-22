@@ -12,7 +12,7 @@
 set -u
 
 REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" || { echo "ERROR: not inside a git repo" >&2; exit 1; }
-cd "$REPO_ROOT"
+cd "$REPO_ROOT" || { echo "ERROR: cannot cd into repo root '$REPO_ROOT'" >&2; exit 1; }
 
 BRANCH="$(git rev-parse --abbrev-ref HEAD 2>/dev/null)"
 

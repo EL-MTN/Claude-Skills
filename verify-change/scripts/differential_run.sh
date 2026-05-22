@@ -51,6 +51,7 @@ fi
 WORKTREE_DIR="$(mktemp -d -t verify-change-worktree.XXXXXX)"
 WORKTREE_BRANCH="verify-change-diff-$$"
 
+# shellcheck disable=SC2329  # invoked indirectly via `trap cleanup EXIT` below
 cleanup() {
   set +e
   # Remove worktree (handles both clean and dirty worktree states).

@@ -1,6 +1,6 @@
 # Claude Skills
 
-A collection of [Claude Code](https://claude.com/claude-code) skills for working *with* a codebase — reconstructing in-progress work, recapping shipped work, verifying active changes, and splitting a tangled working tree into clean commits. Each skill is a self-contained directory (`SKILL.md` + bundled `references/`, `scripts/`, `templates/`) that Claude loads on demand.
+A collection of [Claude Code](https://claude.com/claude-code) skills for working *with* a codebase — reconstructing in-progress work, recapping shipped work, verifying active changes, splitting a tangled working tree into clean commits, and critiquing a UI design across independent expert lenses. Each skill is a self-contained directory (`SKILL.md` + bundled `references/`, `scripts/`, `templates/`) that Claude loads on demand.
 
 ## The skills
 
@@ -10,14 +10,16 @@ A collection of [Claude Code](https://claude.com/claude-code) skills for working
 | [`pr-digest`](pr-digest/) | A per-PR digest of repo activity over a time window — one-line **user-perspective** summaries of each PR and its commits, with priority-lifting and low-signal clustering. | "what shipped this week?", "catch me up on PRs", "what's in flight?". |
 | [`what-was-i-doing`](what-was-i-doing/) | Reconstructs in-progress work from git state (uncommitted diff, branch, recent commits, stashes) — infers the goal, where you stopped, and the safe next step. | Returning to your own work after a context switch: "where did I leave off?". |
 | [`commit-split`](commit-split/) | Groups a tangled working tree into an ordered sequence of focused commits — infers which hunks form each change, names each one, and flags hunks that shouldn't be committed at all (debug prints, secrets, conflict markers). Stages and commits only after you confirm the plan; fully reversible and lossless-verified. | "split these changes into clean commits", "untangle my working tree before a PR". |
+| [`deep-critique`](deep-critique/) | Critiques a UI design across **independent expert lenses** (usability, accessibility, hierarchy, typography, color, brand, consistency) — each critic blind to the others, findings adversarially verified to drop taste-only claims, overlaps merged into a prioritized, severity-ranked fix list. Works on a screenshot, a live URL, or a Figma frame. | "critique this screen", "is this UI accessible?", "design feedback before launch". |
 
 ## The shared design principle
 
-All four resist the same failure mode: **restating what's already visible.** A naive tool enumerates — `git status` lists changed files, `gh pr list` lists PRs, a diff shows the diff. These skills are built to add the layer enumeration can't:
+They resist the same failure mode: **restating what's already visible.** A naive tool enumerates — `git status` lists changed files, `gh pr list` lists PRs, a diff shows the diff, a screenshot shows the screen. These skills are built to add the layer enumeration can't:
 
 - **Falsifiable over descriptive.** `verify-change` forbids intent bullets that merely describe the diff ("adds retry logic"); they must be checkable claims that *could be wrong* ("on a 4xx, fails immediately with no retry"). `what-was-i-doing` applies the same discipline to inference — every "you were doing X" cites the signal that implies it, so you can reject a wrong guess at a glance.
 - **User-perspective over diff-perspective.** `pr-digest` rewrites each PR as "what someone using this codebase got," not "what the diff did."
 - **Confident-or-silent.** `what-was-i-doing` omits a "next step" rather than guess one; `verify-change` asks a clarifying question rather than fabricate intent; `commit-split` refuses to fake a clean split — when two intents are tangled in one hunk, it says so instead of lumping a bugfix into a feature commit.
+- **Falsifiable over taste.** `deep-critique` drops any design finding that's pure preference — every surviving finding cites a measurable fact ("body text is 12px, below the 16px mobile floor") or a named principle, something that *could be wrong*, and runs independent critics so convergence across lenses becomes signal rather than echo.
 
 If a line could be replaced by a `cat` of the underlying source and lose nothing, it gets cut.
 
@@ -26,7 +28,7 @@ If a line could be replaced by a `cat` of the underlying source and lose nothing
 The skills are consumed by symlinking each one into `~/.claude/skills/`:
 
 ```sh
-for s in verify-change pr-digest what-was-i-doing commit-split; do
+for s in verify-change pr-digest what-was-i-doing commit-split deep-critique; do
   ln -s "$PWD/$s" "$HOME/.claude/skills/$s"
 done
 ```
@@ -39,6 +41,7 @@ Symlinks (not copies) mean edits in this repo are live immediately — no re-dep
 - **`pr-digest`** — `git` and the [`gh`](https://cli.github.com/) CLI (authenticated). Falls back to a commit-shaped digest when `gh` is unavailable.
 - **`what-was-i-doing`** — `git` only. Fully read-only.
 - **`commit-split`** — `git` only. Stages and commits, but only after you confirm the plan; fully reversible (`git reset --mixed <orig-head>`) and tree-hash-verified to be lossless.
+- **`deep-critique`** — no git. Needs a way to *see* the design: the Read tool for an image, the Chrome browser tools (`mcp__claude-in-chrome__*`) for a live URL, or the Figma MCP for a Figma frame. The optional multi-agent fan-out uses the `Workflow` tool (opt-in).
 
 The bundled shell scripts are Bash 3.2-compatible (macOS default) and pass `shellcheck` clean.
 
@@ -49,5 +52,6 @@ The bundled shell scripts are Bash 3.2-compatible (macOS default) and pass `shel
 ├── verify-change/      # SKILL.md + references/ + scripts/ + templates/ + BRIEF.md (original build brief)
 ├── pr-digest/          # SKILL.md + references/
 ├── what-was-i-doing/   # SKILL.md + references/ + scripts/
-└── commit-split/       # SKILL.md + references/ + scripts/
+├── commit-split/       # SKILL.md + references/ + scripts/
+└── deep-critique/      # SKILL.md + references/ + templates/ + scripts/ (Workflow harness)
 ```
